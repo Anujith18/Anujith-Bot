@@ -1,17 +1,23 @@
+import os
 import pymongo
 from sample_info import tempDict
-from info import DATABASE_URI, DATABASE_NAME, SECONDDB_URI
-
 import logging
+
+# Set up logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
+# Read the MongoDB URIs from environment variables
+DATABASE_URI = os.getenv("MONGODB_URI")  # Set this in Koyeb
+SECONDDB_URI = os.getenv("SECOND_MONGODB_URI")  # Set this in Koyeb
+
+# Initialize MongoDB clients
 myclient = pymongo.MongoClient(DATABASE_URI)
-mydb = myclient[DATABASE_NAME]
+mydb = myclient[os.getenv("DATABASE_NAME")]  # Use environment variable for database name
 mycol = mydb['CONNECTION']  
 
 myclient2 = pymongo.MongoClient(SECONDDB_URI)
-mydb2 = myclient2[DATABASE_NAME]
+mydb2 = myclient2[os.getenv("DATABASE_NAME")]  # Use environment variable for database name
 mycol2 = mydb2['CONNECTION']
 
 async def add_connection(group_id, user_id):
@@ -70,7 +76,6 @@ async def add_connection(group_id, user_id):
 
         
 async def active_connection(user_id):
-
     query = mycol.find_one(
         { "_id": user_id },
         { "_id": 0, "group_details": 0 }
@@ -145,7 +150,6 @@ async def make_inactive(user_id):
 
 
 async def delete_connection(user_id, group_id):
-
     try:
         update = mycol.update_one(
             {"_id": user_id},
