@@ -1,24 +1,28 @@
-
 import logging
-from struct import pack
 import re
 import base64
+from struct import pack
 from pyrogram.file_id import FileId
 from pymongo.errors import DuplicateKeyError
 from umongo import Instance, Document, fields
 from motor.motor_asyncio import AsyncIOMotorClient
 from marshmallow.exceptions import ValidationError
-from info import DATABASE_URI, DATABASE_NAME, COLLECTION_NAME, USE_CAPTION_FILTER, MAX_B_TN, SECONDDB_URI
+import os  # Import os to access environment variables
+from info import DATABASE_NAME, COLLECTION_NAME, USE_CAPTION_FILTER, MAX_B_TN
 from utils import get_settings, save_group_settings
 from sample_info import tempDict 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-#some basic variables needed
+# Some basic variables needed
 saveMedia = None
 
-#primary db
+# Read the MongoDB URIs from environment variables
+DATABASE_URI = os.getenv("MONGODB_URI")  # Set this in Koyeb
+SECONDDB_URI = os.getenv("SECOND_MONGODB_URI")  # Set this in Koyeb
+
+# Primary DB
 client = AsyncIOMotorClient(DATABASE_URI)
 db = client[DATABASE_NAME]
 instance = Instance.from_db(db)
@@ -37,7 +41,7 @@ class Media(Document):
         indexes = ('$file_name', )
         collection_name = COLLECTION_NAME
 
-#secondary db
+# Secondary DB
 client2 = AsyncIOMotorClient(SECONDDB_URI)
 db2 = client2[DATABASE_NAME]
 instance2 = Instance.from_db(db2)
@@ -57,7 +61,7 @@ class Media2(Document):
         collection_name = COLLECTION_NAME
 
 async def choose_mediaDB():
-    """This Function chooses which database to use based on the value of indexDB key in the dict tempDict."""
+    """This function chooses which database to use based on the value of indexDB key in the dict tempDict."""
     global saveMedia
     if tempDict['indexDB'] == DATABASE_URI:
         logger.info("Using first db (Media)")
@@ -68,13 +72,11 @@ async def choose_mediaDB():
 
 async def save_file(media):
     """Save file in database"""
-
-    # TODO: Find better way to get same file_id for same media to avoid duplicates
     file_id, file_ref = unpack_new_file_id(media.file_id)
     file_name = re.sub(r"(_|\-|\.|\+)", " ", str(media.file_name))
     try:
         if await Media.count_documents({'file_id': file_id}, limit=1):
-            logger.warning(f'{getattr(media, "file_name", "NO_FILE")} is already saved in primary DB !')
+            logger.warning(f'{getattr(media, "file_name", "NO_FILE")} is already saved in primary DB!')
             return False, 0
         file = saveMedia(
             file_id=file_id,
@@ -95,13 +97,10 @@ async def save_file(media):
             logger.warning(
                 f'{getattr(media, "file_name", "NO_FILE")} is already saved in database'
             )
-
             return False, 0
         else:
             logger.info(f'{getattr(media, "file_name", "NO_FILE")} is saved to database')
             return True, 1
-
-
 
 async def get_search_results(chat_id, query, file_type=None, max_results=10, offset=0, filter=False):
     """For given query return (results, next_offset)"""
@@ -120,10 +119,6 @@ async def get_search_results(chat_id, query, file_type=None, max_results=10, off
             else:
                 max_results = int(MAX_B_TN)
     query = query.strip()
-    #if filter:
-        #better ?
-        #query = query.replace(' ', r'(\s|\.|\+|\-|_)')
-        #raw_pattern = r'(\s|_|\-|\.|\+)' + query + r'(\s|_|\-|\.|\+)'
     if not query:
         raw_pattern = '.'
     elif ' ' not in query:
@@ -144,11 +139,11 @@ async def get_search_results(chat_id, query, file_type=None, max_results=10, off
     if file_type:
         filter['file_type'] = file_type
 
-    total_results = ((await Media.count_documents(filter))+(await Media2.count_documents(filter)))
+    total_results = ((await Media.count_documents(filter)) + (await Media2.count_documents(filter)))
 
-    #verifies max_results is an even number or not
-    if max_results%2 != 0: #if max_results is an odd number, add 1 to make it an even number
-        logger.info(f"Since max_results is an odd number ({max_results}), bot will use {max_results+1} as max_results to make it even.")
+    # Verify max_results is an even number or not
+    if max_results % 2 != 0:  # If max_results is an odd number, add 1 to make it an even number
+        logger.info(f"Since max_results is an odd number ({max_results}), bot will use {max_results + 1} as max_results to make it even.")
         max_results += 1
 
     cursor = Media.find(filter)
@@ -160,12 +155,12 @@ async def get_search_results(chat_id, query, file_type=None, max_results=10, off
     cursor2.skip(offset).limit(max_results)
     # Get list of files
     fileList2 = await cursor2.to_list(length=max_results)
-    if len(fileList2)<max_results:
-        next_offset = offset+len(fileList2)
-        cursorSkipper = (next_offset-(await Media2.count_documents(filter)))
-        cursor.skip(cursorSkipper if cursorSkipper>=0 else 0).limit(max_results-len(fileList2))
-        fileList1 = await cursor.to_list(length=(max_results-len(fileList2)))
-        files = fileList2+fileList1
+    if len(fileList2) < max_results:
+        next_offset = offset + len(fileList2)
+        cursorSkipper = (next_offset - (await Media2.count_documents(filter)))
+        cursor.skip(cursorSkipper if cursorSkipper >= 0 else 0).limit(max_results - len(fileList2))
+        fileList1 = await cursor.to_list(length=(max_results - len(fileList2)))
+        files = fileList2 + fileList1
         next_offset = next_offset + len(fileList1)
     else:
         files = fileList2
@@ -177,10 +172,6 @@ async def get_search_results(chat_id, query, file_type=None, max_results=10, off
 async def get_bad_files(query, file_type=None, filter=False):
     """For given query return (results, next_offset)"""
     query = query.strip()
-    #if filter:
-        #better ?
-        #query = query.replace(' ', r'(\s|\.|\+|\-|_)')
-        #raw_pattern = r'(\s|_|\-|\.|\+)' + query + r'(\s|_|\-|\.|\+)'
     if not query:
         raw_pattern = '.'
     elif ' ' not in query:
@@ -207,9 +198,10 @@ async def get_bad_files(query, file_type=None, filter=False):
     cursor.sort('$natural', -1)
     cursor2.sort('$natural', -1)
     # Get list of files
-    files = ((await cursor2.to_list(length=(await Media2.count_documents(filter))))+(await cursor.to_list(length=(await Media.count_documents(filter)))))
+    files = ((await cursor2.to_list(length=(await Media2.count_documents(filter)))) + 
+             (await cursor.to_list(length=(await Media.count_documents(filter)))))
 
-    #calculate total results
+    # Calculate total results
     total_results = len(files)
 
     return files, total_results
@@ -239,10 +231,8 @@ def encode_file_id(s: bytes) -> str:
 
     return base64.urlsafe_b64encode(r).decode().rstrip("=")
 
-
 def encode_file_ref(file_ref: bytes) -> str:
     return base64.urlsafe_b64encode(file_ref).decode().rstrip("=")
-
 
 def unpack_new_file_id(new_file_id):
     """Return file_id, file_ref"""
