@@ -13,9 +13,9 @@ def is_enabled(value, default):
 
 # Bot information
 SESSION = environ.get('SESSION', 'Media_search')
-API_ID = int(environ['API_ID'])
-API_HASH = environ['API_HASH']
-BOT_TOKEN = environ['BOT_TOKEN']
+API_ID = int(environ['29340327'])
+API_HASH = environ['d963ddbf88030085b72cb3250195a12b']
+BOT_TOKEN = environ['8833503966:AAEfPmR5132kTSAZfAObg_3qd-s5SgUwTgQ']
 
 # Bot settings
 CACHE_TIME = int(environ.get('CACHE_TIME', 300))
@@ -43,8 +43,8 @@ NO_RESULTS_MSG = is_enabled((environ.get("NO_RESULTS_MSG", 'False')), False)
 
 # MongoDB information
 SECONDDB_URI = environ.get('SECONDDB_URI', None)
-DATABASE_URI = environ.get('DATABASE_URI', "")
-DATABASE_NAME = environ.get('DATABASE_NAME', "GG")
+DATABASE_URI = environ.get('DATABASE_URI', "mongodb+srv://<username>:<Anujith0>@anujith0.dpcmj7c.mongodb.net/?retryWrites=true&w=majority&appName=Anujith0")
+DATABASE_NAME = environ.get('DATABASE_NAME', "anujith0")
 COLLECTION_NAME = environ.get('COLLECTION_NAME', 'WWW')
 
 # Others
