@@ -1,7 +1,7 @@
 import re
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from info import MAIN_CHANNEL_ID, DATABASE_CHANNEL_ID, AUTO_POST, CUSTOM_CAPTION, BOT_USERNAME
+from info import MAIN_CHANNEL_ID, FILE_STORE_CHANNEL, AUTO_POST, CUSTOM_CAPTION, BOT_USERNAME
 
 # ഫയൽ നെയിമിൽ നിന്ന് എപ്പിസോഡും ക്വാളിറ്റിയും വേർതിരിച്ചെടുക്കാനുള്ള ഫങ്ക്ഷൻ
 def get_file_details(file_name):
@@ -15,7 +15,7 @@ def get_file_details(file_name):
     
     return episode, quality
 
-@Client.on_message(filters.document & filters.chat(DATABASE_CHANNEL_ID))
+@Client.on_message(filters.document & filters.chat(FILE_STORE_CHANNEL))
 async def auto_post_handler(bot, message):
     if AUTO_POST:
         file_name = message.document.file_name
@@ -40,5 +40,5 @@ async def auto_post_handler(bot, message):
             chat_id=MAIN_CHANNEL_ID,
             text=caption,
             reply_markup=reply_markup
-      )
-  
+        )
+        
