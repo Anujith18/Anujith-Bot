@@ -90,3 +90,11 @@ LOG_STR += ("Long IMDB storyline enabled." if LONG_IMDB_DESCRIPTION else "LONG_I
 LOG_STR += ("Spell Check Mode Is Enabled, bot will be suggesting related movies if movie not found\n" if SPELL_CHECK_REPLY else "SPELL_CHECK_REPLY Mode disabled\n")
 LOG_STR += (f"MAX_LIST_ELM Found, long list will be shortened to first {MAX_LIST_ELM} elements\n" if MAX_LIST_ELM else "Full List of casts and crew will be shown in imdb template, restrict them by adding a value to MAX_LIST_ELM\n")
 LOG_STR += f"Your current IMDB template is {IMDB_TEMPLATE}"
+
+CUSTOM_CAPTION = """
+<b>Allu TV Serials</b>
+📁 <b>F i l e  N a m e :</b> {file_name}
+🎬 <b>S e a s o n :</b> {season}
+📌 <b>E p i s o d e :</b> {episode}
+🎬 <b>Q u a l i t y :</b> {quality}
+"""
