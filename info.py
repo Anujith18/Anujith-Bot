@@ -98,3 +98,6 @@ CUSTOM_CAPTION = """
 📌 <b>E p i s o d e :</b> {episode}
 🎬 <b>Q u a l i t y :</b> {quality}
 """
+
+MAIN_CHANNEL_ID = int(environ.get('MAIN_CHANNEL_ID', '-1002110922261'))
+AUTO_POST = environ.get('AUTO_POST', 'True').upper() == 'True'
